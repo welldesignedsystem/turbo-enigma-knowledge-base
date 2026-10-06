@@ -63,8 +63,8 @@ A mismatch is a defect, never an adjustment.
 | `[5,3,8,1,9,2]` | bubble `15`/`16`, merge `10`/`32`, quick `8`/`30` | [worked example](/api/worked-example.md) |
 | `[8,7,6,5,4,3,2,1]`, n = 8 | bubble `28` comparisons = `n(n−1)/2` | [step-counting semantics](/design/step-counting-semantics.md) |
 | `[1,…,32]` | bubble `31` comparisons, `0` moves | [complexity reference](/algorithms/complexity-reference.md) |
-| 32 copies of `7` | quick **`496`** comparisons — the [pivot trap](/algorithms/quicksort.md#the-pivot-trap) | [ADR-003](/decisions/adr-003-pivot-policy.md) |
-| `[1,…,32]` | quick `103` comparisons (median-of-three) | [complexity reference](/algorithms/complexity-reference.md) |
+| 32 copies of `7` | quick **`589`** comparisons / **`1,116`** moves — the [pivot trap](/algorithms/quicksort.md#the-pivot-trap) | [ADR-003](/decisions/adr-003-pivot-policy.md) |
+| `[1,…,32]` | quick `151` comparisons (median-of-three), vs `496` for a naive pivot | [complexity reference](/algorithms/complexity-reference.md) |
 | `[]` and `[x]` | all algorithms: `0` comparisons, `0` moves | [FR-2](/requirements/functional-requirements.md) |
 
 All verified under `step_counting_version: "v1"`. Provenance in
@@ -73,7 +73,7 @@ All verified under `step_counting_version: "v1"`. Provenance in
 **Quicksort assertions must be checked against instrumented output, not hand-derived
 expectations.** A manual trace of quicksort does not reliably reconcile with an implementation —
 documented at
-[the worked example](/api/worked-example.md#the-quicksort-trace-above-is-wrong-and-that-is-the-point).
+[the worked example](/api/worked-example.md#why-this-section-used-to-be-wrong-and-what-replaced-it).
 
 ## Required non-functional tests
 
@@ -113,5 +113,5 @@ Restated because it is the most likely thing to be added by well-meaning scope c
 * No 3-way partition — quicksort keeps its duplicate-key cliff
   ([ADR-003](/decisions/adr-003-pivot-policy.md)).
 * No timing dashboards or trends
-  ([NFR-O3](/nfr/observability.md#nfr-o3--step-counts-not-logged-as-performance-telemetry)).
+  ([NFR-O3](/nfr/observability.md#nfr-o3--step-counts-are-not-performance-telemetry)).
 * No step-by-step trace output.

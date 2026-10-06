@@ -11,7 +11,7 @@ generated: { by: opencode/big-pickle, at: 2026-10-02T00:00:00Z }
 
 # Observability
 
-One requirement here is binding and unusual ([NFR-O3](#nfr-o3--step-counts-not-logged-as-performance-telemetry)).
+One requirement here is binding and unusual ([NFR-O3](#nfr-o3--step-counts-are-not-performance-telemetry)).
 The rest are targets.
 
 ## NFR-O1 — Every request correlatable
@@ -27,7 +27,7 @@ The rest are targets.
 caller must not receive has to be *findable* by an operator.
 
 `run_id` joins the context at
-[step 3 of the lifecycle](/architecture/request-lifecycle.md#3-run-orchestrator), before any
+[step 3 of the lifecycle](/architecture/request-lifecycle.md#sequence), before any
 algorithm runs — so a verification failure at step 4 is traceable to the run that produced it.
 
 ## NFR-O2 — Per-algorithm observability

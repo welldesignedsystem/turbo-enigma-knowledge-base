@@ -83,7 +83,7 @@ What *is* specified is the shape of the problem:
 Storing `input` inline means storage grows with `10,000 × submissions`, which will outgrow a
 document store's comfortable working set long before anything else becomes a problem. The
 documented mitigation is in
-[the data model](/architecture/data-model.md#operationally): keep the `Run` shell plus pointers
+[the data model](/architecture/data-model.md#on-storing-input): keep the `Run` shell plus pointers
 in the primary store and move `input` and `results[]` to object storage.
 
 Deliberately **not** specified yet: retention period, storage tiering, or archival.

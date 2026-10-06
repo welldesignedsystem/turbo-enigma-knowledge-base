@@ -137,8 +137,9 @@ GET /v1/algorithms
       "worst": "O(n^2)",
       "pivot_policy": "median_of_three",
       "known_limitations": [
-        "All-duplicate input degrades to O(n^2): 496 comparisons at n=32, versus 32 for merge sort. Median-of-three does not protect against this. A 3-way (Dutch national flag) partition is the standard fix.",
-        "Worst case also triggers on already-sorted and reverse-sorted input if the pivot policy is ever changed to first/last element; the current policy reduces those to 103 and 126 comparisons respectively."
+        "All-duplicate input degrades to O(n^2): 589 comparisons at n=32, versus 80 for merge sort, and worse than bubble sort's 496-comparison worst case. Median-of-three does not protect against this. A 3-way (Dutch national flag) partition is the standard fix.",
+        "Worst case also triggers on already-sorted and reverse-sorted input if the pivot policy is ever changed to first/last element; the current policy reduces those to 151 and 177 comparisons respectively.",
+        "Median-of-three is not uniformly cheaper: it costs three pivot-selection comparisons per partition (93 of 151 comparisons on sorted input at n=32), and loses to a naive pivot on duplicate-heavy input."
       ],
       "step_counting_version": "v1"
     }
@@ -152,7 +153,7 @@ GET /v1/algorithms
 around `O(n log n)`. Publishing the pivot policy and the concrete failure input is what makes
 the bound actionable: a caller learns both that the cliff exists and which input triggers it.
 
-The measured figures in `known_limitations` (496, 103, 126, 32) come from
+The measured figures in `known_limitations` (589, 151, 177, 80) come from
 [the pivot trap](/algorithms/quicksort.md#the-pivot-trap); their provenance is in
 [measurement provenance](/references/measurement-provenance.md).
 

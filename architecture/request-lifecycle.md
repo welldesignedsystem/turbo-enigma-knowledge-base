@@ -30,7 +30,7 @@ Client
 ┌─────────────────────────────────────────────────────────────────────┐
 │ 2. Validator — FR-1, FR-2, FR-3                    FAIL → 400 / 422 │
 │    - input present, is an array                                     │
-│    - non-empty                                                       │
+│    - may be empty — 0 ≤ length ≤ max_input_length                    │
 │    - every element is an integer within int64                        │
 │    - no element exceeds 2^53-1 (JS precision ceiling)               │
 │    - length ≤ max_input_length (10,000)                             │

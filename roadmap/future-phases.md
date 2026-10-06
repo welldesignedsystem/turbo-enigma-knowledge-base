@@ -75,7 +75,7 @@ small arrays, which is a genuinely surprising result worth reaching).
 **Unlocked by:** storage growth outgrowing the primary store's working set.
 
 Move `input` and `results[]` to object storage, keeping the `Run` shell plus pointers
-([data model](/architecture/data-model.md#operationally)), and define a retention policy — which
+([data model](/architecture/data-model.md#on-storing-input)), and define a retention policy — which
 [no one has specified yet](/nfr/scalability.md#nfr-s3--store-growth-and-retention-unspecified).
 
 ## Phase 3 — Trace output, more input types, historical analysis

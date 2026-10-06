@@ -37,7 +37,7 @@ because nothing on the surface changed.
 |---|---|
 | NFR-M2.1 | Tests **MUST** assert the [golden step counts](/api/worked-example.md) for `[5,3,8,1,9,2]`: bubble `15`/`16`, merge `10`/`32`, quicksort `8`/`30`. |
 | NFR-M2.2 | Tests **MUST** assert bubble sort's worst case of exactly `n(n−1)/2` at n = 4, 8, 16, 32. |
-| NFR-M2.3 | Tests **MUST** assert quicksort's all-duplicate cliff: **496** comparisons at n = 32. |
+| NFR-M2.3 | Tests **MUST** assert quicksort's all-duplicate cliff: **589** comparisons and **1,116** moves at n = 32. |
 | NFR-M2.4 | Tests **MUST** assert that running all algorithms together yields the same per-algorithm metrics as running each in isolation. |
 | NFR-M2.5 | A test **MUST** inject a deliberately broken algorithm and assert the run **fails** rather than returning wrong data. |
 
@@ -51,7 +51,7 @@ verification gate that has never been observed rejecting a fault is not known to
 
 **Quicksort figures must come from instrumented runs, not hand-derived expectations.** A manual
 trace of quicksort does not reliably reconcile with an implementation
-([documented](/api/worked-example.md#the-quicksort-trace-above-is-wrong-and-that-is-the-point)).
+([documented](/api/worked-example.md#why-this-section-used-to-be-wrong-and-what-replaced-it)).
 M2.1–M2.3 are regression fixtures against recorded output, not proofs.
 
 ## NFR-M3 — Adding an algorithm requires no engine change
@@ -62,8 +62,8 @@ M2.1–M2.3 are regression fixtures against recorded output, not proofs.
 | NFR-M3.2 | The registry **MUST** be the single source for default selection, the discovery endpoint, and execution order ([component view](/architecture/component-view.md)). |
 | NFR-M3.3 | Adding an algorithm **MUST NOT** require modifying the orchestrator, the validator, or the HTTP layer. |
 
-M2.3 keeps the three consumers of the registry from drifting into three separate lists — which
-would show up as an API advertising an algorithm it will not run.
+NFR-M3.2 keeps the three consumers of the registry from drifting into three separate lists —
+which would show up as an API advertising an algorithm it will not run.
 
 [US-8](/requirements/user-stories.md) is scoped to this, with the honest caveat that "without
 touching the engine" still means a code change and a deployment: algorithms are

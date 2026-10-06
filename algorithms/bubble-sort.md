@@ -52,22 +52,22 @@ moves at n = 32.
 
 ## Measured step counts on random input
 
-Mean of 20 seeds, uniformly random integers.
+Mean over uniformly random integers (400 seeds at n ≤ 32, fewer above).
 
 | n | `comparisons` | `moves` |
 |---|---|---|
-| 8 | 25 | 29 |
-| 16 | 114 | 120 |
-| 32 | 479 | 482 |
-| 64 | 1,956 | 1,968 |
-| 128 | 8,057 | 8,103 |
-| 256 | 32,385 | 33,210 |
-| 512 | 130,511 | 131,765 |
+| 8 | 26 | 28 |
+| 16 | 113 | 120 |
+| 32 | 480 | 493 |
+| 64 | 1,976 | 2,028 |
+| 128 | 8,041 | 8,122 |
+| 256 | 32,429 | 32,718 |
+| 512 | 130,441 | 130,761 |
 
 `comparisons` and `moves` track each other almost exactly, because on random input a comparison
 results in a swap slightly more often than not. Bubble sort's move count therefore carries
 almost no information its comparison count does not already carry — unlike merge sort, where
-[the two diverge substantially](/algorithms/merge-sort.md#measured-step-counts).
+[the two diverge substantially](/algorithms/merge-sort.md#measured-step-counts-on-random-input).
 
 ## Degenerate and instructive inputs, n = 32
 
@@ -85,12 +85,17 @@ those inputs are indistinguishable, because it only ever asks "is this pair out 
 
 [the worked example](/api/worked-example.md#bubble-sort--15-comparisons-16-moves) walks
 `[5,3,8,1,9,2]` pass by pass and reconciles to 15 comparisons and 16 moves. The 15 decomposes
-as `5 + 4 + 3 + 2 + 1`, one short of the worst case, because a single comparison found its
-pair already ordered.
+as `5 + 4 + 3 + 2 + 1`, which sums to **exactly** the worst case `n(n−1)/2 = 15`. Not one
+short of it: on this input bubble sort pays its full worst-case comparison bill.
 
-That one comparison of slack is the entire difference between this input and the worst case —
-and a useful illustration that "average case" is an average over *all* permutations, not a
-bound on any particular one.
+What *is* below worst case is the move count. Reverse-sorted input of the same length performs
+the same 15 comparisons but swaps every one of them, costing **30 moves** against this input's
+16. The single comparison of slack is a comparison, and a comparison that finds a pair already
+ordered costs no move — so the slack shows up entirely in moves.
+
+That is a useful illustration that "average case" is an average over *all* permutations, not a
+bound on any particular one, and that the two metrics can disagree about which input is
+harder.
 
 ## Why it is in the registry
 
@@ -98,8 +103,8 @@ bound on any particular one.
    ([verified](/design/step-counting-semantics.md#consequence-2--bubble-sorts-worst-case-is-exactly-nn12)).
    The service's cost model is bubble sort's cost model.
 2. **It is the only phase-1 algorithm whose cost depends on input *order*.** Merge sort and
-   quicksort both run roughly the same on sorted and unsorted input; bubble sort runs 31
-   comparisons on sorted input and 496 on reverse-sorted input. That contrast is
+   quicksort both run in the same ballpark on sorted and unsorted input; bubble sort runs 31
+   comparisons on sorted input and 496 on reverse-sorted input — a factor of 16. That contrast is
    [US-2](/requirements/user-stories.md) in miniature.
 3. **It is the only one with a linear best case**, which shows that an optimisation can change
    the complexity class of one case.

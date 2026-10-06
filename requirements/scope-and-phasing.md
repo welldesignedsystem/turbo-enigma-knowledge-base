@@ -56,13 +56,13 @@ because the service does not exist.
    [worked example's golden numbers](/api/worked-example.md) for
    `[5,3,8,1,9,2]`: bubble `15`/`16`, merge `10`/`32`, quicksort `8`/`30`. These are
    regression fixtures, and a mismatch means the counting semantics drifted.
-3. A regression test proves the [FR-4 defensive-copy](/design/run-execution-model.md#no-mutation-of-shared-input)
+3. A regression test proves the [FR-4 defensive-copy](/design/run-execution-model.md#decision-1--one-defensive-copy-per-execution)
    requirement: running all three algorithms produces the same numbers as running each in
    isolation.
 4. An injected-fault test proves FR-6: a deliberately broken algorithm fails the run and
    never returns a successful response containing wrong data.
 5. Quicksort's worst case is demonstrated in a test: n = 32 all-duplicate input yields
-   496 comparisons, matching [the documented figure](/algorithms/quicksort.md#the-pivot-trap).
+   589 comparisons, matching [the documented figure](/algorithms/quicksort.md#the-pivot-trap).
 6. The timing warning required by FR-7 appears in the response body and in the API docs.
 7. The [NFR targets](/nfr/nfr-overview.md) are measured against a real build, and this
    bundle's NFRs move from "target" to "measured" with provenance recorded.

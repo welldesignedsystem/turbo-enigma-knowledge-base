@@ -49,17 +49,22 @@ algorithm, reusing that copy across iterations:
 
 1. Bubble sort receives `[5,3,8,1,9,2]` and sorts it in place. The buffer is now
    `[1,2,3,5,8,9]`.
-2. Merge sort receives that same buffer. It performs **10 comparisons** — exactly the
-   best-case count for a sorted array, not the average count.
-3. Quicksort receives the same buffer. It performs **8 comparisons** — its *best* case, not
-   the average.
+2. Merge sort receives that same buffer. It performs **7 comparisons** — the best case for a
+   sorted array, not the 10 the caller's input actually costs.
+3. Quicksort receives the same buffer. It performs **17 comparisons and 18 moves** against the
+   correct 17 and 30.
 
-Compare against the [measured figures](/api/worked-example.md) for the same input:
-bubble 15, merge 10, quick 8. Interestingly the merge and quick numbers here coincide with
-the correct averages, which is the trap: **nothing looks broken.** The comparison still
-returns three algorithms' results, they are all correctly sorted, and the numbers are
-plausible. But two of the three algorithms were measured on a different input than the one
-the caller submitted, and the figure would be wrong for any other array.
+Compare against the [measured figures](/api/worked-example.md) for the submitted input:
+bubble 15/16, merge 10/32, quicksort 17/30. So the corrupted run reports
+bubble 15/16, merge **7**/32, quicksort 17/**18**.
+
+This is the nastiest version of the bug, because **two of the three algorithms report figures
+that look entirely reasonable**. Quicksort's comparison count is even *identical* to the
+correct one — median-of-three happens to cost the same number of tests on sorted and
+unsorted input of this length — and merge sort's move count is unchanged, because merge sort's
+moves are input-independent anyway. Only two numbers in the whole response are wrong, both by
+a small margin, and the outputs are all correctly sorted. Nothing looks broken. But two of the
+three algorithms were measured on an input the caller never submitted.
 
 The same argument applies across iterations: with `iterations: 100`, an in-place algorithm
 run repeatedly on one buffer measures a sort, then 99 re-sorts of an already-sorted array.

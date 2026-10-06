@@ -125,7 +125,7 @@ The registry snapshot, published by `GET /v1/algorithms` ([FR-9](/requirements/f
 |---|---|---|
 | `id` | string | Registry key. Stable within a `step_counting_version`. |
 | `name` | string | Display name. |
-| `stability` | enum | `stable`, `unstable`. All three phase-1 algorithms are stable. |
+| `stable` | boolean | `true` for bubble sort and merge sort; **`false` for quicksort** ([profile](/algorithms/quicksort.md#stability)). |
 | `in_place` | boolean | |
 | `auxiliary_space` | string | `O(1)`, `O(n)`, `O(log n)`. |
 | `best` / `average` / `worst` | string | Complexity classes. |

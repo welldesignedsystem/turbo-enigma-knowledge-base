@@ -38,9 +38,9 @@ element: one copying out of a half, one writing into the merged array.
 | Average | O(n log n) | — | — |
 | Worst | O(n log n) | `n·⌊log₂ n⌋ − n + 1` **only for powers of two** | same as best |
 
-## Merge sort is the same speed on every input
+## Merge sort's move count is identical on every input
 
-Measured `comparisons` across every input shape at n = 32:
+Measured at n = 32:
 
 | Input | `comparisons` | `moves` |
 |---|---|---|
@@ -48,14 +48,22 @@ Measured `comparisons` across every input shape at n = 32:
 | Reverse sorted | 80 | 320 |
 | All identical | 80 | 320 |
 | 4 distinct values | 116 | 320 |
+| Random (mean of 400 seeds) | ≈122 | 320 |
 
-`comparisons` varies only from 80 to 116 — about 1.45× — while bubble sort varies by 16× and
-quicksort by 4.8× on the same inputs. `moves` is **identical** at 320 for every input, because
-`moves` depends only on the shape of the recursion tree, not on the data.
+`moves` is **identical at 320 for every input**, because `moves` depends only on the shape of the
+recursion tree, not on the data.
+
+`comparisons` is **not** input-independent — a common and persistent error. It ranges from 80 to
+about 122 on random input, with a theoretical maximum of 129 for this split rule, so a factor of
+about 1.6. That is still far less variation than bubble sort (16×, from 31 to 496) or quicksort
+(3.9×, from 151 to 589) on the same inputs, and it never becomes quadratic — but "the same speed
+on every input" is true of merge sort's **moves** and only loosely true of its comparisons. See
+[Consequence 6](/design/step-counting-semantics.md#consequence-6--input-independent-is-true-of-merge-sorts-moves-and-false-of-its-comparisons).
 
 This is the algorithm's real selling point and the reason it is in the registry
-([US-2](/requirements/user-stories.md)): it is the one whose worst case *is* its best case. Any
-input-dependent blowup in a comparison of this trio is therefore attributable to one of the
+([US-2](/requirements/user-stories.md)): it is the only algorithm in the trio whose **worst case
+is its best case in moves**, and whose worst case is at most 1.6× its best in comparisons. Any
+quadratic input-dependent blowup in a comparison of this trio is attributable to one of the
 other two.
 
 ## The textbook closed form is wrong off the powers of two

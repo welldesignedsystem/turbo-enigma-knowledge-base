@@ -44,7 +44,7 @@ Implements [FR-6](/requirements/functional-requirements.md); mechanism in
 The budget is the runtime enforcement of [NFR-P1](/nfr/performance.md), covering the case the
 static [input limit](/design/input-validation.md) does not predict. Its most likely trigger is
 not a larger array but **a pathological shape**: a valid length with an adversarial structure.
-At n = 32, quicksort performs 496 comparisons on all-duplicate input against 103 on sorted
+At n = 32, quicksort performs 589 comparisons on all-duplicate input against 151 on sorted
 input ([measured](/algorithms/complexity-reference.md#degenerate-inputs)).
 
 ### Why `422` and not `503`

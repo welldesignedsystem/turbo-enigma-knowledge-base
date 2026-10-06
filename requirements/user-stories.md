@@ -44,7 +44,7 @@ Satisfied by FR-4, FR-5, and the [worked example](/api/worked-example.md).
 
 The service deliberately ships [quicksort](/algorithms/quicksort.md) with a pivot policy
 that does not fix the all-duplicate case. That is a teaching affordance, not an oversight.
-A learner submitting `[7,7,7,…]` gets 496 comparisons at n = 32 — the same as bubble sort's
+A learner submitting `[7,7,7,…]` gets 589 comparisons at n = 32 — more than bubble sort's
 worst case — and can work out why.
 
 Satisfied by FR-3, FR-5 and the registry's published `pivot_policy` (FR-9).

@@ -76,11 +76,25 @@ reports `moves` only.
 | Situation | Count |
 |---|---|
 | Swap of two distinct slots | +2 |
+| Swap of a slot with **itself** (`i == j`, a self-swap) | **+2** — see below |
 | Writing one key into a vacant slot in any array the algorithm uses | +1 |
 | Copying a key from the working array into an auxiliary buffer | +1 |
 | Copying that key from the auxiliary buffer back to the working array | +1 |
 | Loop bookkeeping (`i += 1`), rebinding a local variable | **+0** |
 | Initialising the auxiliary buffer by filling with a sentinel | **+0** — nothing is moved |
+
+**A self-swap counts 2 moves.** `a[i], a[j] = a[j], a[i]` with `i == j` writes each slot its
+own value, so no key is relocated — but it is still two write operations executed, and
+counting it as 0 would require inspecting the index relationship at every call site. This
+service counts *operations executed*, not *values changed*, and the rule is deliberately
+mechanical so that two implementations agree without coordinating.
+
+The alternative convention (a self-swap is 0 moves because nothing moves) is defensible and
+would change quicksort's figures substantially — 0 moves instead of 1,054 on sorted input at
+n = 32, for example. It is **not** the phase-1 convention, and an implementation that adopted
+it would report figures that do not match this bundle. The trade-off is worth stating plainly:
+the mechanical rule slightly overstates the work quicksort does, and in exchange it removes a
+whole class of implementation disagreement.
 
 **Merge sort therefore pays 2 moves per element per merge level**, counting the copy out and
 the copy back. This is why its move count is roughly double what a naive reading suggests,
@@ -128,11 +142,14 @@ For the worked input `[5,3,8,1,9,2]`, measured under these rules:
 
 | Algorithm | `comparisons` | `moves` |
 |---|---|---|
-| Bubble sort | 15 | 16 |
-| Merge sort | **10** | **32** |
-| Quicksort | **8** | **30** |
+| Bubble sort | 15 | **16** |
+| Merge sort | **10** | 32 |
+| Quicksort | 17 | 30 |
 
-Quicksort is best on comparisons; bubble sort is best on moves, by a wide margin. Neither
+Quicksort is best on comparisons; bubble sort is best on moves, by a wide margin. Note that
+quicksort's 17 comparisons include 9 pivot-selection comparisons across its 3 partitions
+(3 per partition, per [Rule 1](#rule-1--comparisons)) — omitting those is exactly the mistake
+that produces a figure matching no other implementation. Neither
 answer is wrong, and this is the concrete argument for
 [returning a vector rather than a scalar](/decisions/adr-001-metric-vector-over-scalar.md).
 A single "steps" number here requires an arbitrary, undisclosed choice of weighting, and any
@@ -213,16 +230,41 @@ at n = 32:
 
 | Input | First/last element pivot | Median-of-three |
 |---|---|---|
-| Already sorted | 496 | 103 |
-| Reverse sorted | 496 | 126 |
-| 4 distinct values | 181 | 181 |
-| All identical | 496 | **496** |
+| Already sorted | 496 | **151** |
+| Reverse sorted | 496 | **177** |
+| 4 distinct values | 196 | **265** |
+| All identical | 496 | **589** |
+
+Median-of-three buys a large improvement on sorted and reverse-sorted input — the two shapes
+that defeat a naive pivot — and it is *worse* than a naive pivot on the 4-distinct case. On
+all-identical input it does not help at all: 589 comparisons is not `n(n−1)/2` but is
+quadratic in the same way, and it is worse than bubble sort's 496. See
+[the pivot trap](/algorithms/quicksort.md#the-pivot-trap) for why no pivot rule fixes that.
 
 This is why `pivot_policy` is a mandatory registry field
 ([FR-9](/requirements/functional-requirements.md)) and why the published `worst` complexity
 class for quicksort is not optional decoration — it is the thing that makes the number
 interpretable. Full discussion in [the pivot trap](/algorithms/quicksort.md#the-pivot-trap) and
 [ADR-003](/decisions/adr-003-pivot-policy.md).
+
+### Consequence 6 — "input-independent" is true of merge sort's moves and false of its comparisons
+
+This is the single most commonly repeated error in sorting commentary, so the bundle states it
+explicitly. Merge sort performs the **same number of moves** on every input of a given length,
+because the merge level structure depends only on `n`:
+
+| n | `moves`, every input | `comparisons`, sorted | `comparisons`, random mean |
+|---|---|---|---|
+| 32 | 320 | 80 | ≈122 |
+| 128 | 1,792 | 448 | 736 |
+
+Comparisons are a different matter. Each merge compares until one side is exhausted, and
+*which* side empties depends on the data. Sorted, reverse-sorted, and all-identical input all
+yield the minimum of 80 comparisons at n = 32; random input averages about 122, and the theoretical
+maximum for this split rule is `Σ(size − 1)` over internal nodes, or 129 at n = 32.
+
+Quoting a single merge-sort comparison count as though it characterised the algorithm is
+therefore wrong, and it is wrong in the direction that flatters the algorithm.
 
 ## Versioning this document
 

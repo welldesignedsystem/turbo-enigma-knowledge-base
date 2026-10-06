@@ -84,7 +84,7 @@ load-test at step 9 and either confirm or revise the limit with a recorded reaso
 | **Impact** | Low–medium — a slow run, not a wrong result; the time budget catches it. |
 | **Score** | **Medium** |
 
-At n = 32, all-duplicate input costs quicksort 496 comparisons and 1,116 moves
+At n = 32, all-duplicate input costs quicksort 589 comparisons and 1,116 moves
 ([measured](/algorithms/quicksort.md#the-pivot-trap)). At the input limit it is roughly 50
 million comparisons — bubble sort's cost, on an algorithm whose advertised worst case is
 O(n log n).
@@ -135,7 +135,7 @@ and within weeks the chart will be treated as fact — with every confound in
 
 **Mitigation:** the disclaimer in **every** response, not only the docs; NFR-O3 prohibiting
 `elapsed_ns` dashboards and SLOs
-([observability](/nfr/observability.md#nfr-o3--step-counts-not-logged-as-performance-telemetry));
+([observability](/nfr/observability.md#nfr-o3--step-counts-are-not-performance-telemetry));
 NFR-P3.6 prohibiting persisted trends; `results[]` never metric-ordered
 ([ADR-001](/decisions/adr-001-metric-vector-over-scalar.md)).
 
@@ -154,7 +154,7 @@ listing endpoint to keep per-row operations cheap. No retention policy exists
 ([NFR-S3](/nfr/scalability.md#nfr-s3--store-growth-and-retention-unspecified)).
 
 **Mitigation:** the move to object storage is already designed
-([data model](/architecture/data-model.md#operationally)); retention is the open decision.
+([data model](/architecture/data-model.md#on-storing-input)); retention is the open decision.
 
 **Warning signal:** run-write latency trending up alongside store size.
 

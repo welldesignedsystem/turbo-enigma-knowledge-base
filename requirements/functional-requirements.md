@@ -20,8 +20,10 @@ Related: [product brief](/requirements/product-brief.md),
 
 ## FR-1 — Accept an integer array
 
-`POST /v1/runs` **MUST** accept a JSON body containing `input`, a non-empty array of
-integers. Integers **MUST** be 64-bit signed (`int64`), inclusive range
+`POST /v1/runs` **MUST** accept a JSON body containing `input`, an array of
+integers. The array **MAY** be empty — see [FR-2](/requirements/functional-requirements.md);
+emptiness is a length question, not a type question. Integers **MUST** be 64-bit signed
+(`int64`), inclusive range
 `-9,223,372,036,854,775,808` to `9,223,372,036,854,775,807`.
 
 The service **MUST** reject non-integer values, fractional numbers, booleans, strings,

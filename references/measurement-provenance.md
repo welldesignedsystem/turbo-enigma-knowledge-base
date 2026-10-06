@@ -40,8 +40,11 @@ service.** The service does not exist yet
 
 * Each sort's output was asserted equal to the reference sort of the input, on every
   measurement. No figure below comes from a run that produced a wrong ordering.
-* Quicksort was checked for correctness across 400 randomly generated arrays with 1 to 6
-  distinct values: 0 mismatches.
+* Quicksort, merge sort, bubble sort and a naive first-pivot quicksort were all checked for
+  correctness across sorted, reverse-sorted, all-equal, few-distinct and randomly generated
+  arrays at every length from 0 to 44: 0 mismatches. A correctness gate of this kind is
+  mandatory — see [the correction record](#a-correction-to-these-figures) below for a case where
+  an implementation that returned nonsense produced entirely plausible numbers.
 * The counting rules were implemented directly from the normative text, including the
   swap-is-2-moves rule and the merge sort copy-out/copy-back rule.
 
@@ -49,18 +52,20 @@ service.** The service does not exist yet
 
 | Figure | Value | Appears in |
 |---|---|---|
-| Worked example, all three algorithms | 15/16, 10/32, 8/30 | [worked example](/api/worked-example.md) |
+| Worked example, all three algorithms | 15/16, 10/32, 17/30 | [worked example](/api/worked-example.md) |
 | Bubble sort worst case `comparisons` | `n(n−1)/2`, exact at n = 4, 8, 16, 32 | [step-counting semantics](/design/step-counting-semantics.md) |
 | Bubble sort best case (early exit) | `n−1`, 0 moves | [step-counting semantics](/design/step-counting-semantics.md) |
 | Merge sort `moves` | measured at n = 1…32, including non-powers of two | [step-counting semantics](/design/step-counting-semantics.md) |
 | Merge sort comparison min/max | exhaustive over all permutations, n = 1…9 | [step-counting semantics](/design/step-counting-semantics.md) |
-| Pivot policy comparison at n = 32 | 496 vs 103 sorted; 496 vs 126 reverse; 181 vs 181 duplicate-heavy; 496 vs 496 all-equal | [quicksort](/algorithms/quicksort.md), [ADR-003](/decisions/adr-003-pivot-policy.md) |
-| Growth table, random inputs | mean of 20 seeds per size, n = 8…512 | [complexity reference](/algorithms/complexity-reference.md) |
+| Pivot policy comparison at n = 32 | 496 vs 151 sorted; 496 vs 177 reverse; 196 vs 265 4-distinct; 496 vs 589 all-equal | [quicksort](/algorithms/quicksort.md), [ADR-003](/decisions/adr-003-pivot-policy.md) |
+| Growth table, random inputs | mean over 400 seeds (n ≤ 32) / fewer above, n = 8…512 | [complexity reference](/algorithms/complexity-reference.md) |
+| Merge sort `comparisons`, random input | 122 at n = 32, 736 at n = 128 — **input-dependent**, unlike its `moves` | [Consequence 6](/design/step-counting-semantics.md#consequence-6--input-independent-is-true-of-merge-sorts-moves-and-false-of-its-comparisons) |
+| Quicksort recursion depth, smaller-side-first | 8 at n = 32, 23 at n = 10,000 | [quicksort](/algorithms/quicksort.md#recursion-strategy) |
 
 ## How each figure was obtained
 
-* **Growth table** — uniformly random integers in `[1, 10⁶)`, mean of 20 independent seeds per
-  size. Uniform-random is the conventional meaning of "average case"
+* **Growth table** — uniformly random integers in `[1, 10⁶)`, mean of 400 independent seeds per
+  size for n ≤ 32 and 50–200 above. Uniform-random is the conventional meaning of "average case"
   ([glossary](/glossary.md#best--average--worst-case)); it is **not** a claim about any real
   data distribution.
 * **Degenerate inputs** — single fixed arrays (all-sorted, reverse-sorted, all-equal,
@@ -98,7 +103,7 @@ This is the part that matters most.
    (**Consequences 3 and 4** in [step-counting semantics](/design/step-counting-semantics.md))
    they show that the textbook *closed forms* do not hold at non-power-of-two sizes. That is a
    correction to a common simplification, not a challenge to the asymptotic results.
-5. **Not exhaustive for the quicksort figures.** Quicksort's 496/103/126/181 figures are single
+5. **Not exhaustive for the quicksort figures.** Quicksort's 589/151/177/265 figures are single
    fixed inputs, not bounds. Only the merge sort min/max figures are exhaustive.
 6. **Not stable across implementations.** Two implementations of "quicksort" with different
    pivot policies produce different numbers for the same input. That is why `pivot_policy` is a
@@ -106,18 +111,55 @@ This is the part that matters most.
    ([ADR-003](/decisions/adr-003-pivot-policy.md)) and why `step_counting_version` is part of
    every response ([FR-8](/requirements/functional-requirements.md)).
 
-## One documented negative result
+## A correction to these figures
 
-The quicksort hand-trace in [the worked example](/api/worked-example.md#the-quicksort-trace-above-is-wrong-and-that-is-the-point)
-does not reconcile with the instrumented run, and has been left in place rather than
-reconciled. The bubble sort and merge sort traces were each independently re-derived and do
-reconcile.
+Every quicksort *comparison* figure in this bundle was wrong until an audit re-derived it. The
+figures are recorded here rather than quietly replaced, because the failure is more instructive
+than the numbers.
 
-The conclusion recorded in that document — that quicksort's counts cannot be reliably
-hand-verified, so they must come from an instrumented run — is a finding about method, and it
-is the reason the golden-number tests
-([phase 1](/roadmap/phase-1-sort-comparison.md)) compare against instrumented output rather
-than against hand-derived expectations.
+**What was wrong.** The bundle originally published 8 comparisons for quicksort on the worked
+example, and 103 / 126 / 181 / 496 at n = 32. The correct figures under the specified
+implementation are 17 and 151 / 177 / 265 / 589. The `496` figures for a *naive first-pivot*
+quicksort were correct throughout — the two policies had been conflated.
+
+**Why it happened.** The harness that produced the original numbers omitted quicksort's
+pivot-selection comparisons — exactly the error
+[Rule 1](/design/step-counting-semantics.md#rule-1--comparisons) exists to prevent. Every
+**move** figure in the bundle was already correct, which is the tell: the bug was in counting
+comparisons, not in the algorithm.
+
+**The worst part.** The defective harness *also* did not sort correctly. Re-deriving the
+figures required finding and fixing a bug in the measurement code itself (an index initialised
+to the array offset rather than to 0), and a harness that produces wrong output will happily
+report step counts for it. Nothing in a step count reveals that the underlying run was
+meaningless.
+
+**What changed in this bundle.** The reference implementations were rewritten with a
+correctness gate — every implementation must reproduce the reference sort of every input at
+every length from 0 to 44 before any figure is taken — and every numeric claim across the
+bundle was re-derived from those gated implementations. One documented convention was added as
+a result: [a self-swap counts 2 moves](/design/step-counting-semantics.md#rule-2--moves).
+
+**What survived.** Bubble sort's figures were correct and are unchanged, including
+`n(n−1)/2` at every length tested. Merge sort's `moves` were correct and are unchanged. Merge
+sort's *comparisons*, however, had been presented as input-independent; they are not, and that
+claim is now narrowed in
+[Consequence 6](/design/step-counting-semantics.md#consequence-6--input-independent-is-true-of-merge-sorts-moves-and-false-of-its-comparisons).
+
+**The generalisable lesson.** An agent-produced figure is a claim, not a measurement, until a
+correctness gate stands in front of it. This is the strongest available argument for the
+golden-number tests in [phase 1](/roadmap/phase-1-sort-comparison.md) and for the rule that no
+figure enters this bundle without stated provenance: this bundle's own headline example
+survived review precisely because someone re-derived it.
+
+## The quicksort hand trace now reconciles
+
+The earlier version of [the worked example](/api/worked-example.md) published a quicksort
+hand-trace that matched nothing, and documented the mismatch as proof that quicksort cannot be
+hand-verified. That conclusion was wrong: the *measurement* was defective, not the method. The
+trace has been rewritten and reconciles exactly at 17 comparisons and 30 moves, and the lesson
+retained is the stronger one — a trace and a measurement must describe the same algorithm, and
+a disagreement between them means a specification defect, not an inherent limitation.
 
 ## Trust state of this document
 

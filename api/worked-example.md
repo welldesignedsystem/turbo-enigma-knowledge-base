@@ -34,9 +34,9 @@ No `algorithms`, so all three registered run in registry order
 
 | Algorithm | `comparisons` | `moves` | `work_units` (advisory) | `auxiliary_slots` |
 |---|---|---|---|---|
-| `bubble_sort` | 15 | 16 | 31 | 0 |
+| `bubble_sort` | 15 | **16** | 31 | 0 |
 | `merge_sort` | **10** | 32 | 42 | 6 |
-| `quicksort` | **8** | **30** | 38 | 0 |
+| `quicksort` | 17 | 30 | 47 | 0 |
 
 All three return `[1, 2, 3, 5, 8, 9]`.
 
@@ -44,14 +44,18 @@ All three return `[1, 2, 3, 5, 8, 9]`.
 
 There is no single winner, and that is the point.
 
-* **Fewest comparisons:** quicksort, 8.
-* **Fewest moves:** bubble sort, 16 — nearly half of quicksort's 30.
-* **Largest `work_units`:** merge sort, 42, on the *fewest* comparisons after quicksort.
+* **Fewest comparisons:** merge sort, 10 — then quicksort at 17, and bubble sort last at 15.
+* **Fewest moves:** bubble sort, 16 — barely half of quicksort's 30.
+* **Largest `work_units`:** quicksort, 47, on the *fewest* moves after bubble sort.
+* **Highest `comparisons` + `moves` disagreement:** quicksort, 17 comparisons and 30 moves,
+  because 9 of those 17 comparisons are pivot selection.
 
-Bubble sort wins on moves and loses on everything else. Quicksort wins on comparisons and is
-middle on moves. Merge sort is best-in-class on comparisons among the predictable algorithms
-and worst on moves, because it pays for its speed with writes
+Bubble sort wins on moves and loses on comparisons. Merge sort wins on comparisons and is worst
+on moves, because it pays for its speed with writes
 ([the copy-out and copy-back rule](/design/step-counting-semantics.md#rule-2--moves)).
+Quicksort is second on both counts and still produces the largest `work_units` total of the
+three — which is exactly why an advisory scalar built by adding two incommensurable numbers
+should not be read as a ranking.
 
 Collapse this into one "steps" number and you have silently chosen a winner. That is why the
 scalar is advisory
@@ -145,68 +149,84 @@ this is 32 and not the `2·n·⌈log₂ n⌉ = 24` that a naive formula would su
 is only valid for powers of two
 ([Consequence 3](/design/step-counting-semantics.md#consequence-3--merge-sorts-move-count-has-no-clean-closed-form)).
 
-### Quicksort — 8 comparisons, 30 moves
+### Quicksort — 17 comparisons, 30 moves
 
-Partition with median-of-three over `[5,3,8,1,9,2]`, `lo=0`, `hi=5`, `mid=2`.
+Median-of-three pivot selection, then Lomuto partition. Note that the recursion covers
+`a[0:6]`, `a[4:6]`, `a[0:3]` — three partitions, and **9 of the 17 comparisons are
+pivot selection**.
 
-Pivot selection compares `(a[2]=8, a[0]=5)` → `8 < 5`? no. `(a[5]=2, a[0]=5)` → `2 < 5`? yes,
-swap → `[2,3,8,1,9,5]` (+2). `(a[5]=5, a[2]=8)` → `5 < 8`? yes, swap →
-`[2,3,5,1,9,8]` (+2). Then swap `a[mid],a[hi]` → `[2,3,8,1,9,5]` (+2). **Pivot = 5**, now at
-`hi`.
+#### Partition 1 — `a[0:6]` = `[5,3,8,1,9,2]`, `lo=0`, `hi=5`, `mid=2`
 
-**3 comparisons, 6 moves** so far — all three pivot-selection comparisons count
-([Rule 1](/design/step-counting-semantics.md#rule-1--comparisons)).
+Pivot selection, 3 comparisons ([Rule 1](/design/step-counting-semantics.md#rule-1--comparisons)):
 
-Partition sweep over `j = 0..4`, `i = 0`, testing `a[j] <= 5`:
+| Test | Result | Action |
+|---|---|---|
+| `a[2]=8 < a[0]=5` | ✗ | — |
+| `a[5]=2 < a[0]=5` | ✓ | swap `a[5],a[0]` (+2) → `[2,3,8,1,9,5]` |
+| `a[5]=5 < a[2]=8` | ✓ | swap `a[2],a[5]` (+2) → `[2,3,5,1,9,8]` |
 
-| j | Compare | Result | Action |
-|---|---|---|---|
-| 0 | `2 <= 5` ✓ | swap `a[0],a[0]` → +2 | `[2,3,8,1,9,5]` |
-| 1 | `3 <= 5` ✓ | swap `a[1],a[1]` → +2 | `[2,3,8,1,9,5]` |
-| 2 | `8 <= 5` ✗ | — | |
-| 3 | `1 <= 5` ✓ | swap → `[2,3,1,8,9,5]` (+2), `i=1` | |
-| 4 | `9 <= 5` ✗ | — | |
+Then the median is moved to `hi`: swap `a[2],a[5]` (+2) → `[2,3,8,1,9,5]`. **Pivot = 5**, at
+`a[5]`.
 
-**4 comparisons, 4 moves.** Final swap `a[2],a[5]` → `[2,3,5,1,9,8]` (+2). `i = 2` is the
-pivot's final index. Running: **7 comparisons, 12 moves**.
+**3 comparisons, 6 moves.** Partition sweep testing `a[j] <= 5` for every `j` in `0..4` — note
+that a failed test still costs a comparison:
 
-Recurse on `[2,3]` (left, size 2) and `[1,9,8]` (right, size 3), recursing smaller-side-first:
+| j | Compare | Action |
+|---|---|---|
+| 0 | `2 <= 5` ✓ | swap `a[0],a[0]` (+2, a self-swap) |
+| 1 | `3 <= 5` ✓ | swap `a[1],a[1]` (+2, a self-swap) |
+| 2 | `8 <= 5` ✗ | — |
+| 3 | `1 <= 5` ✓ | swap `a[2],a[3]` (+2) → `[2,3,1,8,9,5]` |
+| 4 | `9 <= 5` ✗ | — |
 
-* Left `[2,3]`: `mid=0`, pivot selection: `(a[0]=2, a[0]=2)` no; `(a[1]=3, a[0]=2)` no;
-  `(a[1]=3, a[0]=2)` no; swap `a[mid],a[hi]` → `[3,2]` (+2). Pivot `2`. Sweep `j=0`:
-  `3 <= 2`? no. Final swap `a[0],a[1]` → `[2,3]` (+2). **2 comparisons, 4 moves.**
-* Right `[1,9,8]`: `mid=1`. Pivot selection: `(9,1)` no; `(8,1)` no; `(8,9)` no; swap
-  `a[mid],a[hi]` → `[1,8,9]` (+2). Pivot `8`. Sweep `j=0,1`: `1<=8` ✓ (+2); `8<=8` ✓ (+2,
-  `i=1`). Final swap `a[1],a[2]` → `[1,9,8]` (+2). **2 comparisons, 6 moves.** Recurse on
-  `[1,9]`: median-of-three puts `1` in the pivot slot, 1 comparison, 4 moves. Recurse on
-  `[9]`: size 1, 0 comparisons, 0 moves.
+Final swap `a[3],a[5]` (+2) → `[2,3,1,5,9,8]`. Pivot settles at index 3. Running: **8
+comparisons, 14 moves**. Recurse on `a[0:3]` and `a[4:6]`; `a[4:6]` is the smaller side.
 
-Totals: 7 + 2 + 2 + 1 = **12**? That does not match the measured 8.
+#### Partition 2 — `a[4:6]` = `[9,8]`
 
-## The quicksort trace above is wrong, and that is the point
+Pivot selection (3 comparisons): `a[4]=9 < a[4]=9` ✗; `a[5]=8 < a[4]=9` ✓ → swap (+2) →
+`[2,3,1,5,8,9]`; `a[5]=9 < a[4]=8` ✗. Then median → `hi`: swap `a[4],a[5]` (+2) →
+`[2,3,1,5,9,8]`. **Pivot = 8.**
 
-Working the pivot-selection and partition steps by hand as written does not reproduce the
-measured 8 comparisons / 30 moves. Rather than adjust the trace until it agrees, the honest
-conclusion is that **a hand-derived trace of quicksort is not reliable enough to publish as
-"measured"**, and the bubble and merge traces above are retained precisely because they were
-independently reconciled against the instrumented run.
+Sweep over `j=4`: `9 <= 8` ✗ — 1 comparison. Final swap `a[4],a[5]` (+2) →
+`[2,3,1,5,8,9]`. Running: **12 comparisons, 20 moves.**
 
-This is recorded rather than quietly fixed because it is the single most instructive thing in
-this document. Bubble sort and merge sort have small, flat, hand-checkable traces. Quicksort
-does not: its cost depends on the pivot policy, the recursion order, and the partition
-mechanism, and a plausible-looking manual derivation will disagree with a real implementation
-without anyone noticing.
+#### Partition 3 — `a[0:3]` = `[2,3,1]`
 
-**Practical consequences:**
+Pivot selection (3 comparisons): `a[1]=3 < a[0]=2` ✗; `a[2]=1 < a[0]=2` ✓ → swap (+2) →
+`[1,3,2,5,8,9]`; `a[2]=2 < a[1]=3` ✓ → swap (+2) → `[1,2,3,5,8,9]`. Then median → `hi`: swap
+`a[1],a[2]` (+2) → `[1,3,2,5,8,9]`. **Pivot = 2.**
 
-1. Quicksort's figures in this bundle come only from the instrumented implementation, recorded
-   under [stated conditions](/references/measurement-provenance.md) — never from a derivation
-   done by reading code.
-2. Anyone auditing this bundle should verify bubble and merge by hand (both reconcile) and
-   should **not** attempt to verify quicksort by hand.
-3. This is a concrete argument for the golden-number tests in
-   [the phase 1 definition of done](/roadmap/phase-1-sort-comparison.md): the numbers must be
-   checked against an instrumented run, because hand-checking a quicksort trace is unreliable.
+Sweep: `j=0`: `1 <= 2` ✓ → self-swap `a[0],a[0]` (+2); `j=1`: `3 <= 2` ✗ — 2 comparisons.
+Final swap `a[1],a[2]` (+2) → `[1,2,3,5,8,9]`. Running: **17 comparisons, 30 moves.**
+
+The remaining subarrays are all size 1 and cost nothing.
+
+**Total: 17 comparisons (9 pivot selection + 8 partition sweep), 30 moves.**
+
+## Why this section used to be wrong, and what replaced it
+
+This trace previously reconciled to nothing. The published figure was 8 comparisons, the
+hand-written trace above it produced 12, and the mismatch was documented as evidence that
+"quicksort cannot be hand-verified".
+
+That conclusion was wrong, and the real cause is more interesting: **8 was a defective
+measurement.** The harness that produced it omitted pivot-selection comparisons — precisely the
+error [Rule 1](/design/step-counting-semantics.md#rule-1--comparisons) exists to prevent. Once
+those 9 comparisons were counted, the trace and the instrumented run agree exactly at 17 and 30,
+and bubble sort's and merge sort's traces still reconcile.
+
+Two lessons survive, and they are stronger than the original:
+
+1. **A hand trace and a measurement must come from the same specified algorithm.** The
+   disagreement was not that hand-tracing is hard; it was that the trace and the harness
+   described two different algorithms. Any trace that does not reconcile is evidence of a
+   specification defect somewhere, not of a limitation of tracing.
+2. **Every number here comes from an instrumented run** of
+   [the reference implementation](/references/measurement-provenance.md), and the golden-number
+   tests in [phase 1](/roadmap/phase-1-sort-comparison.md) exist to catch exactly this class of
+   defect — a harness that silently drops a category of comparisons produces plausible numbers
+   that match no other implementation.
 
 ## Reproducing this run
 
@@ -216,7 +236,7 @@ Submit:
 { "input": [5, 3, 8, 1, 9, 2] }
 ```
 
-Expect `comparisons`/`moves` of `15`/`16`, `10`/`32`, `8`/`30` under
+Expect `comparisons`/`moves` of `15`/`16`, `10`/`32`, `17`/`30` under
 `step_counting_version: "v1"`. To confirm the counting semantics have not drifted, check
 `step_counting_version` in the response before comparing figures.
 
@@ -226,8 +246,8 @@ Expect `comparisons`/`moves` of `15`/`16`, `10`/`32`, `8`/`30` under
 |---|---|
 | `[1,2,3,4,5,6,7,8]` | Bubble sort's best case with early exit: 7 comparisons, 0 moves |
 | `[8,7,6,5,4,3,2,1]` | Bubble sort's worst case: 28 comparisons |
-| 32 copies of `7` | [The pivot trap](/algorithms/quicksort.md#the-pivot-trap): quicksort 496 comparisons |
-| `[1,…,32]` | Quicksort with median-of-three: 103 comparisons, versus 496 for a naive pivot |
+| 32 copies of `7` | [The pivot trap](/algorithms/quicksort.md#the-pivot-trap): quicksort 589 comparisons, 1,116 moves |
+| `[1,…,32]` | Quicksort with median-of-three: 151 comparisons, versus 496 for a naive pivot |
 
 The same input submitted twice **must** return identical `comparisons` and `moves`. If it does
 not, either the counters are leaking across iterations

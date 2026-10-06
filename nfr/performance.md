@@ -95,7 +95,7 @@ queue depth. See [scalability](/nfr/scalability.md).
 Two requests of the same length can differ by more than an order of magnitude in run time,
 because step counts depend on input shape
 ([the complexity reference](/algorithms/complexity-reference.md#degenerate-inputs)). At n = 32
-quicksort performs between 103 and 496 comparisons depending on input.
+quicksort performs between 151 and 589 comparisons depending on input.
 
 **Any percentile computed across a mixed workload will be dominated by whatever mix of input
 shapes arrived,** not by the algorithm. NFR-P1's rows are therefore specified against a stated
@@ -103,7 +103,7 @@ worst-case input, and any SLO derived from them must state which input shape it 
 
 ## Interactions with other NFRs
 
-* [NFR-S1](/nfr/scalability.md#nfr-s1--concurrency-bounded-by-cpu-work) — CPU-bound work does not
+* [NFR-S1](/nfr/scalability.md#nfr-s1--concurrency-bounded-by-cpu-work-not-by-memory) — CPU-bound work does not
   parallelise by adding concurrency; it parallelises by adding cores.
 * [NFR-R2](/nfr/reliability.md#nfr-r2--per-run-time-budget-enforced) — the time budget is the
   runtime enforcement of NFR-P1, for inputs that are valid but unexpectedly expensive.

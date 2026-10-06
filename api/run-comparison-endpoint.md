@@ -28,7 +28,7 @@ Content-Type: application/json
 
 | Field | Type | Required | Default | Notes |
 |---|---|---|---|---|
-| `input` | integer array | **yes** | — | `int64`. Non-empty. ≤ 10,000 elements ([FR-2](/requirements/functional-requirements.md)). |
+| `input` | integer array | **yes** | — | `int64`. May be empty. ≤ 10,000 elements ([FR-2](/requirements/functional-requirements.md)). |
 | `algorithms` | string array | no | all registered | Registry IDs. `[]` is rejected; omit for the default ([FR-3](/requirements/functional-requirements.md)). |
 | `options.iterations` | integer | no | `1` | 1…1000. Timed repeats; step counts come from one iteration ([FR-10](/requirements/functional-requirements.md)). |
 | `options.warmup_iterations` | integer | no | `0` | 0…1000. Executed and discarded. For JIT warm-up only. |
@@ -170,7 +170,7 @@ Bubble sort is skipped. An unknown ID alongside a valid one fails the whole requ
 }
 ```
 
-Quicksort performs **496** comparisons against merge sort's **32** — median-of-three does not
+Quicksort performs **589** comparisons against merge sort's **80** — median-of-three does not
 protect against all-duplicate input
 ([the pivot trap](/algorithms/quicksort.md#the-pivot-trap)).
 

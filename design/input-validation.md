@@ -28,7 +28,7 @@ the expensive checks.
 | 3 | Body parses as a JSON object | `400` | |
 | 4 | `input` present | `400` | |
 | 5 | `input` is an array | `400` | |
-| 6 | `input` is non-empty | `400` | Empty is rejected **as an input error**, but note `[]` in fact succeeds in returning results — see the edge-case table. |
+| 6 | `input.length` ≥ 0 — empty is **valid** | — | No lower bound. `[]` is a legitimate run: every algorithm returns `[]` with `0` comparisons and `0` moves. See the edge-case table. |
 | 7 | Every element is an integer | `400` | No floats, no fractional, no strings, no `null`, no booleans. |
 | 8 | Every element within `int64` range | `400` | |
 | 9 | Every element ≤ 2⁵³−1 | `400` | JavaScript precision ceiling — see below. |
@@ -113,11 +113,11 @@ justified on the grounds that quicksort handles it easily.
 |---|---|---|
 | `input: []` | **Accepted.** Every selected algorithm returns `[]` with `comparisons: 0`, `moves: 0`. | Correct and instructive — it is the base case of every algorithm. |
 | `input: [x]` | Accepted. `comparisons: 0`, `moves: 0`. | Same reason. |
-| All elements equal | Accepted. Worth submitting: quicksort degrades to 496 comparisons at n = 32 ([the pivot trap](/algorithms/quicksort.md#the-pivot-trap)). | The most instructive input in the service. |
+| All elements equal | Accepted. Worth submitting: quicksort degrades to 589 comparisons at n = 32 ([the pivot trap](/algorithms/quicksort.md#the-pivot-trap)). | The most instructive input in the service. |
 | Already sorted | Accepted. | Bubble sort's best case: `n−1` comparisons, 0 moves. |
 | Reverse sorted | Accepted. | Bubble sort's worst case. |
 | Negative and zero values | Accepted. | Sorting is order-based; nothing special about negatives. |
-| Duplicates | Accepted. | All three algorithms are stable, so equal keys retain input order. |
+| Duplicates | Accepted. | Equal keys retain input order under bubble sort and merge sort, but **not** under quicksort, which is unstable ([profile](/algorithms/quicksort.md#stability)). |
 | `algorithms: []` | `400` | Use omission to mean "all". |
 | Unknown algorithm ID | `400`, naming the unknown IDs | Silent skipping would produce a silently incomplete comparison. |
 | `algorithms: null` | Treated as omitted | Explicit null is treated as "use the default", not as an error. |
